@@ -13,6 +13,7 @@ import android.util.Log;
 
 import io.mrarm.switchlinuxlauncher.log.LogProxy;
 import io.mrarm.switchlinuxlauncher.log.Logger;
+import io.mrarm.switchlinuxlauncher.log.ui.LogView;
 
 public class UsbDeviceActivity extends AppCompatActivity {
 
@@ -53,6 +54,8 @@ public class UsbDeviceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_usb_device);
+
+        logger.addOutput((LogView) findViewById(R.id.log_view));
 
         usbManager = (UsbManager) getSystemService(USB_SERVICE);
         usbDevice = getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
