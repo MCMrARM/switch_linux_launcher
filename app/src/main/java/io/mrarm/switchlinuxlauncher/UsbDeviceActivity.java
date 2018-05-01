@@ -11,9 +11,10 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-public class UsbDeviceActivity extends AppCompatActivity {
+import io.mrarm.switchlinuxlauncher.log.LogProxy;
+import io.mrarm.switchlinuxlauncher.log.Logger;
 
-    private static final String TAG = "UsbDeviceActivity";
+public class UsbDeviceActivity extends AppCompatActivity {
 
     private static final String ACTION_USB_PERMISSION =
             "io.mrarm.switchlinuxlauncher.UsbDeviceActivity.USB_PERMISSION";
@@ -32,7 +33,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
                             false)) {
                         onPermissionGranted();
                     } else {
-                        Log.d(TAG, "Permission denied - " + device);
+                        log.e("Permission denied - " + device);
                         finish();
                     }
                 }
@@ -44,6 +45,9 @@ public class UsbDeviceActivity extends AppCompatActivity {
     private UsbManager usbManager;
     private UsbDevice usbDevice;
     private PendingIntent usbPermissionIntent;
+
+    private Logger logger = new Logger();
+    private LogProxy log = new LogProxy(logger, "UsbDeviceActivity");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +62,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
             return;
         }
 
-        Log.d(TAG, "Device id = " + usbDevice.getDeviceId());
+        log.d("Device id = " + usbDevice.getDeviceId());
 
         if (getIntent().getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false))
             onPermissionGranted();
@@ -84,7 +88,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
     }
 
     public void onPermissionGranted() {
-        Log.d(TAG, "Permission granted");
+        log.i("Permission granted");
     }
 
 }
