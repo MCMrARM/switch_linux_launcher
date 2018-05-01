@@ -34,4 +34,8 @@ public final class LogProxy {
         log(Logger.ERROR, message);
     }
 
+    public void e(String message, Throwable t) {
+        logger.e(tag, message, t);
+    }
+
 }

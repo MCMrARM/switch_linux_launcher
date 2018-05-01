@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -50,6 +53,8 @@ public class UsbDeviceActivity extends AppCompatActivity {
     private Logger logger = new Logger();
     private LogProxy log = new LogProxy(logger, "UsbDeviceActivity");
 
+    private boolean inProgress = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,7 +70,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
             return;
         }
 
-        log.d("Device id = " + usbDevice.getDeviceId());
+        log.d("Device = " + usbDevice.getDeviceName());
 
         if (getIntent().getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false))
             onPermissionGranted();
@@ -91,7 +96,39 @@ public class UsbDeviceActivity extends AppCompatActivity {
     }
 
     public void onPermissionGranted() {
+        onOperationStarted();
         log.i("Permission granted");
+        UsbDeviceConnection connection = usbManager.openDevice(usbDevice);
+        if (connection == null) {
+            log.e("Opening the device failed");
+            onOperationFinished();
+            return;
+        }
+        new Thread(() -> {
+            try {
+                log.i("Initializing USB exploit");
+                ShofEL2 exploit = new ShofEL2(logger, usbDevice, connection);
+                log.i("Executing USB exploit");
+                exploit.run();
+            } catch (Throwable t) {
+                log.e("An error has occurred", t);
+            }
+            onOperationFinished();
+        }).start();
     }
 
+    private void onOperationStarted() {
+        inProgress = true;
+    }
+
+    private void onOperationFinished() {
+        inProgress = false;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (inProgress)
+            return;
+        super.onBackPressed();
+    }
 }

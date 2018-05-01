@@ -3,6 +3,8 @@ package io.mrarm.switchlinuxlauncher.log;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.annotation.Retention;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +66,14 @@ public final class Logger {
 
     public void e(String tag, String message) {
         log(ERROR, tag, message);
+    }
+
+    public void e(String tag, String message, Throwable t) {
+        log(ERROR, tag, message);
+        StringWriter writer = new StringWriter();
+        t.printStackTrace(new PrintWriter(writer));
+        for (String line : writer.toString().split("\n"))
+            log(ERROR, tag, line);
     }
 
 }

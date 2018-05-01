@@ -30,8 +30,10 @@ public class LogView extends RecyclerView implements LogOutput {
 
     @Override
     public void log(int level, String tag, String message) {
-        adapter.log(level, tag, message);
-        scrollToPosition(adapter.getItemCount() - 1);
+        post(() -> {
+            adapter.log(level, tag, message);
+            scrollToPosition(adapter.getItemCount() - 1);
+        });
     }
 
 }
