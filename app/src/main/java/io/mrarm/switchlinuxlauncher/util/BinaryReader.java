@@ -1,4 +1,4 @@
-package io.mrarm.switchlinuxlauncher;
+package io.mrarm.switchlinuxlauncher.util;
 
 public class BinaryReader {
 

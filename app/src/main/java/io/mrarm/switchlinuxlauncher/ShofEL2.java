@@ -13,6 +13,9 @@ import java.io.OutputStream;
 
 import io.mrarm.switchlinuxlauncher.log.LogProxy;
 import io.mrarm.switchlinuxlauncher.log.Logger;
+import io.mrarm.switchlinuxlauncher.util.BinaryReader;
+import io.mrarm.switchlinuxlauncher.util.BinaryWriter;
+import io.mrarm.switchlinuxlauncher.util.HexString;
 
 public class ShofEL2 {
 
