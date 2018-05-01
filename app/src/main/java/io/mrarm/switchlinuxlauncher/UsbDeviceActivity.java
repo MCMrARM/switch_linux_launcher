@@ -107,7 +107,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
         new Thread(() -> {
             try {
                 log.i("Initializing USB exploit");
-                ShofEL2 exploit = new ShofEL2(logger, usbDevice, connection);
+                ShofEL2 exploit = new ShofEL2(this, logger, usbDevice, connection);
                 log.i("Executing USB exploit");
                 exploit.run();
             } catch (Throwable t) {
