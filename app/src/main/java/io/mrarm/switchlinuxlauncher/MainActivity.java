@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         for (UsbDevice dev : manager.getDeviceList().values()) {
             Log.d(TAG, "USB device: " + Integer.toString(dev.getVendorId(), 16) + ":" +
                     Integer.toString(dev.getProductId(), 16));
-            if (isSupportedDevice(dev)) {
+            if (DeviceType.isSupportedDevice(dev)) {
                 if (detectedDevice != null)
                     Log.w(TAG, "More than one supported device");
                 detectedDevice = dev;
@@ -71,9 +71,9 @@ public class MainActivity extends AppCompatActivity {
         }
         if (detectedDevice == null)
             statusText.setText(R.string.state_waiting_for_device);
-        else if (isDeviceRCM(detectedDevice))
+        else if (DeviceType.isDeviceRCM(detectedDevice))
             statusText.setText(R.string.state_device_connected_rcm);
-        else if (isDeviceUBoot(detectedDevice))
+        else if (DeviceType.isDeviceUBoot(detectedDevice))
             statusText.setText(R.string.state_device_connected_uboot);
         else
             statusText.setText(R.string.state_device_connected);
@@ -83,18 +83,6 @@ public class MainActivity extends AppCompatActivity {
     private void scanForDevicesAndQueue() {
         scanForDevices();
         handler.postDelayed(scanRunnable, 500);
-    }
-
-    private boolean isDeviceRCM(UsbDevice dev) {
-        return (dev.getVendorId() == 0x0955 && dev.getProductId() == 0x7321);
-    }
-
-    private boolean isDeviceUBoot(UsbDevice dev) {
-        return (dev.getVendorId() == 0x0955 && dev.getProductId() == 0x701a);
-    }
-
-    private boolean isSupportedDevice(UsbDevice dev) {
-        return isDeviceRCM(dev) || isDeviceUBoot(dev);
     }
 
 }

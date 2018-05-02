@@ -13,6 +13,7 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import io.mrarm.switchlinuxlauncher.log.LogProxy;
 import io.mrarm.switchlinuxlauncher.log.Logger;
@@ -69,7 +70,25 @@ public class UsbDeviceActivity extends AppCompatActivity {
             finish();
             return;
         }
+        checkPermissionAndStart();
+    }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (inProgress) {
+            Toast.makeText(this, R.string.error_processing_other_device,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+        if (device != null) {
+            usbDevice = device;
+            checkPermissionAndStart();
+        }
+    }
+
+    private void checkPermissionAndStart() {
         log.d("Device = " + usbDevice.getDeviceName());
 
         if (getIntent().getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false))
@@ -106,13 +125,12 @@ public class UsbDeviceActivity extends AppCompatActivity {
         }
         new Thread(() -> {
             try {
-                if (usbDevice.getVendorId() == 0x0955 && usbDevice.getProductId() == 0x7321) {
+                if (DeviceType.isDeviceRCM(usbDevice)) {
                     log.i("Initializing USB exploit");
                     ShofEL2 exploit = new ShofEL2(this, logger, usbDevice, connection);
                     log.i("Executing USB exploit");
                     exploit.run();
-                } else if (usbDevice.getVendorId() == 0x0955 &&
-                        usbDevice.getProductId() == 0x701a) {
+                } else if (DeviceType.isDeviceUBoot(usbDevice)) {
                     log.i("Starting IMX USB Loader");
                     ImxUsbLoader loader = new ImxUsbLoader(logger, usbDevice, connection);
                     loader.load("/sdcard/imxusb/switch.conf");
@@ -124,11 +142,11 @@ public class UsbDeviceActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void onOperationStarted() {
+    private synchronized void onOperationStarted() {
         inProgress = true;
     }
 
-    private void onOperationFinished() {
+    private synchronized void onOperationFinished() {
         inProgress = false;
     }
 

@@ -7,4 +7,6 @@
     <string name="state_device_connected">Device connected!</string>
     <string name="state_device_connected_rcm">Device connected (in RCM mode)</string>
     <string name="state_device_connected_uboot">Device connected (in U-Boot download gadget mode)</string>
+
+    <string name="error_processing_other_device">Already processing another device</string>
 </resources>
