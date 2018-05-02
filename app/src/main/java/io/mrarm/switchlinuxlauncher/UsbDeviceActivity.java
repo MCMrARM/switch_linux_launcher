@@ -106,10 +106,17 @@ public class UsbDeviceActivity extends AppCompatActivity {
         }
         new Thread(() -> {
             try {
-                log.i("Initializing USB exploit");
-                ShofEL2 exploit = new ShofEL2(this, logger, usbDevice, connection);
-                log.i("Executing USB exploit");
-                exploit.run();
+                if (usbDevice.getVendorId() == 0x0955 && usbDevice.getProductId() == 0x7321) {
+                    log.i("Initializing USB exploit");
+                    ShofEL2 exploit = new ShofEL2(this, logger, usbDevice, connection);
+                    log.i("Executing USB exploit");
+                    exploit.run();
+                } else if (usbDevice.getVendorId() == 0x0955 &&
+                        usbDevice.getProductId() == 0x701a) {
+                    log.i("Starting IMX USB Loader");
+                    ImxUsbLoader loader = new ImxUsbLoader(logger, usbDevice, connection);
+                    loader.load("/sdcard/imxusb/switch.conf");
+                }
             } catch (Throwable t) {
                 log.e("An error has occurred", t);
             }

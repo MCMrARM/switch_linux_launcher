@@ -1,0 +1,3 @@
+[submodule "app/src/main/jni/imx_usb_loader"]
+	path = app/src/main/jni/imx_usb_loader
+	url = https://github.com/MCMrARM/imx_usb_loader

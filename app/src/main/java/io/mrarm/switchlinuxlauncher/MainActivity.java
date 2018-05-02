@@ -39,7 +39,8 @@ public class MainActivity extends AppCompatActivity {
         for (UsbDevice dev : manager.getDeviceList().values()) {
             Log.d(TAG, "USB device: " + Integer.toString(dev.getVendorId(), 16) + ":" +
                     Integer.toString(dev.getProductId(), 16));
-            if (dev.getVendorId() == 0x0955 && dev.getProductId() == 0x7321) {
+            if ((dev.getVendorId() == 0x0955 && dev.getProductId() == 0x7321) ||
+                    (dev.getVendorId() == 0x0955 && dev.getProductId() == 0x701a)) {
                 Intent intent = new Intent(this, UsbDeviceActivity.class);
                 intent.putExtra(UsbManager.EXTRA_DEVICE, dev);
                 startActivity(intent);

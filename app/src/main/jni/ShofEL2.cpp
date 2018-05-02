@@ -33,7 +33,6 @@ Java_io_mrarm_switchlinuxlauncher_ShofEL2_nativeControlReadUnbounded(
     urb->endpoint = 0;
     urb->buffer = buffer;
     urb->buffer_length = sizeof(usb_ctrlrequest) + size;
-    urb->actual_length = 0;
     urb->usercontext = (void*) 0xf0f;
 
     log.v("%s", HexString::encode((char*) urb, sizeof(usbdevfs_urb)).c_str());
@@ -43,7 +42,10 @@ Java_io_mrarm_switchlinuxlauncher_ShofEL2_nativeControlReadUnbounded(
     ioctl(fd, USBDEVFS_DISCARDURB, urb);
     usbdevfs_urb* purb;
     do {
-        ioctl(fd, USBDEVFS_REAPURB, &purb);
+        if (ioctl(fd, USBDEVFS_REAPURB, &purb)) {
+            log.e("ioctl: error");
+            break;
+        }
         if (purb != urb)
             log.e("Reaped the wrong URB! addr 0x%lx != 0x%lx", (unsigned long) purb,
                   (unsigned long) &urb);
