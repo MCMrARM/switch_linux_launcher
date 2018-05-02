@@ -83,7 +83,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
             return;
         }
         UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-        if (device != null) {
+        if (device != null && !device.equals(usbDevice)) {
             usbDevice = device;
             checkPermissionAndStart();
         }
