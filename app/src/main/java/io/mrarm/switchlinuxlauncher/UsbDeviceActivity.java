@@ -7,12 +7,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import io.mrarm.switchlinuxlauncher.log.LogProxy;
@@ -56,11 +54,14 @@ public class UsbDeviceActivity extends AppCompatActivity {
 
     private boolean inProgress = false;
 
+    private TextView statusText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_usb_device);
 
+        statusText = findViewById(R.id.status_text);
         logger.addOutput((LogView) findViewById(R.id.log_view));
 
         usbManager = (UsbManager) getSystemService(USB_SERVICE);
@@ -120,7 +121,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
         UsbDeviceConnection connection = usbManager.openDevice(usbDevice);
         if (connection == null) {
             log.e("Opening the device failed");
-            onOperationFinished();
+            onOperationFailed();
             return;
         }
         new Thread(() -> {
@@ -135,19 +136,43 @@ public class UsbDeviceActivity extends AppCompatActivity {
                     ImxUsbLoader loader = new ImxUsbLoader(logger, usbDevice, connection);
                     loader.load("/sdcard/imxusb/switch.conf");
                 }
+                onOperationSucceeded();
             } catch (Throwable t) {
                 log.e("An error has occurred", t);
+                onOperationFailed();
             }
-            onOperationFinished();
         }).start();
     }
 
     private synchronized void onOperationStarted() {
         inProgress = true;
+        if (DeviceType.isDeviceUBoot(usbDevice))
+            postStatus(R.string.state_loader_in_progress, R.color.status_in_progress);
+        else
+            postStatus(R.string.state_exploit_in_progress, R.color.status_in_progress);
     }
 
-    private synchronized void onOperationFinished() {
+    private synchronized void onOperationSucceeded() {
         inProgress = false;
+        if (DeviceType.isDeviceUBoot(usbDevice))
+            postStatus(R.string.state_loader_success, R.color.status_success);
+        else
+            postStatus(R.string.state_exploit_success, R.color.status_success);
+    }
+
+    private synchronized void onOperationFailed() {
+        inProgress = false;
+        if (DeviceType.isDeviceUBoot(usbDevice))
+            postStatus(R.string.state_loader_error, R.color.status_error);
+        else
+            postStatus(R.string.state_exploit_error, R.color.status_error);
+    }
+
+    private void postStatus(int strId, int colorId) {
+        runOnUiThread(() -> {
+            statusText.setText(strId);
+            statusText.setBackgroundResource(colorId);
+        });
     }
 
     @Override

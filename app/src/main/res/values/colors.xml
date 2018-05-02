@@ -9,4 +9,8 @@
     <color name="color_dark_info">#4FC3F7</color>
     <color name="color_dark_warn">#FFB74D</color>
     <color name="color_dark_error">#E57373</color>
+
+    <color name="status_in_progress">#303F9F</color>
+    <color name="status_success">#4CAF50</color>
+    <color name="status_error">#F44336</color>
 </resources>

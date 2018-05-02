@@ -8,11 +8,13 @@
     tools:context=".UsbDeviceActivity">
 
     <TextView
+        android:id="@+id/status_text"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:text="@string/state_device_connected"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
-        android:background="?attr/colorBackgroundFloating"
+        android:background="@color/status_in_progress"
+        android:textColor="#fff"
         android:gravity="center"/>
 
     <io.mrarm.switchlinuxlauncher.log.ui.LogView
