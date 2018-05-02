@@ -77,13 +77,14 @@ public class UsbDeviceActivity extends AppCompatActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (inProgress) {
-            Toast.makeText(this, R.string.error_processing_other_device,
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
         UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
         if (device != null && !device.equals(usbDevice)) {
+            if (inProgress) {
+                Toast.makeText(this, R.string.error_processing_other_device,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             usbDevice = device;
             checkPermissionAndStart();
         }
