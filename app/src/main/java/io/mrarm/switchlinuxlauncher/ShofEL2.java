@@ -119,7 +119,7 @@ public class ShofEL2 {
         try {
             sanityCheck(srcBase, dstBase);
         } catch (RuntimeException e) {
-            log.i("throwing more");
+            log.i("Throwing more data");
             byte[] data = new byte[xferLen];
             write(data, 0, data.length);
         }
@@ -137,6 +137,7 @@ public class ShofEL2 {
             log.i("In: " + cmd);
             if (cmd.equals("CBFS")) {
                 cbfs();
+                log.i("You have been served");
                 break;
             }
         }
@@ -153,20 +154,21 @@ public class ShofEL2 {
             int inLen = conn.bulkTransfer(eIn, inBuf, 8, 0);
             if (inLen < 8)
                 throw new RuntimeException("Read error");
-            int offset = BinaryReader.readInt32(inBuf, 0);
-            int length = BinaryReader.readInt32(inBuf, 4);
+            int offset = BinaryReader.readInt32BE(inBuf, 0);
+            int length = BinaryReader.readInt32BE(inBuf, 4);
+            if (offset + length == 0)
+                return;
             log.i("Sending 0x" + Integer.toString(length, 16) + " bytes @0x" +
                     Integer.toString(offset, 16));
             while (length > 0) {
                 int l = length;
                 if (l > 32 * 1024)
                     l = 32 * 1024;
-                log.i("Transfer " + offset + " " + l + " " + (offset + l) + "/" + data.length);
-                int n = conn.bulkTransfer(eOut, data, offset, l, 0);
-                if (n < 0)
-                    throw new RuntimeException("Write error");
-                offset += n;
-                length -= n;
+                int ret = conn.bulkTransfer(eOut, data, offset, l, 0);
+                if (ret < 0)
+                    log.e("Transfer error = " + ret);
+                offset += ret;
+                length -= ret;
             }
         }
     }
