@@ -22,16 +22,17 @@ public class ImxUsbLoader {
             throw new RuntimeException("Claiming in the interface failed");
     }
 
-    public void load(String confPath) {
+    public boolean load(String confPath) {
         boolean hidMode = deviceInterface.getInterfaceClass() == UsbConstants.USB_CLASS_HID;
         log.i("hid mode " + hidMode);
-        nativeLoad(log, conn.getFileDescriptor(), hidMode, confPath);
+        return nativeLoad(log, conn.getFileDescriptor(), hidMode, confPath);
     }
 
     static {
         System.loadLibrary("switchlauncher");
     }
 
-    private static native void nativeLoad(LogProxy log, int fd, boolean hidMode, String confPath);
+    private static native boolean nativeLoad(
+            LogProxy log, int fd, boolean hidMode, String confPath);
 
 }

@@ -126,23 +126,35 @@ public class UsbDeviceActivity extends AppCompatActivity {
             return;
         }
         new Thread(() -> {
-            try {
-                if (DeviceType.isDeviceRCM(usbDevice)) {
-                    log.i("Initializing USB exploit");
-                    ShofEL2 exploit = new ShofEL2(this, logger, usbDevice, connection);
-                    log.i("Executing USB exploit");
-                    exploit.run();
-                } else if (DeviceType.isDeviceUBoot(usbDevice)) {
-                    log.i("Starting IMX USB Loader");
-                    ImxUsbLoader loader = new ImxUsbLoader(logger, usbDevice, connection);
-                    loader.load("/sdcard/imxusb/switch.conf");
-                }
-                onOperationSucceeded();
-            } catch (Throwable t) {
-                log.e("An error has occurred", t);
-                onOperationFailed();
-            }
+            if (DeviceType.isDeviceRCM(usbDevice))
+                runRCMExploit(connection);
+            if (DeviceType.isDeviceUBoot(usbDevice))
+                runUBootLoader(connection);
+            connection.close();
         }).start();
+    }
+
+    private void runRCMExploit(UsbDeviceConnection connection) {
+        try {
+            log.i("Initializing USB exploit");
+            ShofEL2 exploit = new ShofEL2(this, logger, usbDevice, connection);
+            log.i("Executing USB exploit");
+            exploit.run();
+
+            onOperationSucceeded();
+        } catch (Throwable t) {
+            log.e("An error has occurred", t);
+            onOperationFailed();
+        }
+    }
+
+    private void runUBootLoader(UsbDeviceConnection connection) {
+        log.i("Starting IMX USB Loader");
+        ImxUsbLoader loader = new ImxUsbLoader(logger, usbDevice, connection);
+        if (loader.load("/sdcard/imxusb/switch.conf"))
+            onOperationSucceeded();
+        else
+            onOperationFailed();
     }
 
     private synchronized void onOperationStarted() {

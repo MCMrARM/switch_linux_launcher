@@ -19,10 +19,10 @@ extern "C" {
 #include <imx_sdp.h>
 }
 
-static void handleWork(JLogProxy& log, sdp_dev* dev) {
+static bool handleWork(JLogProxy& log, sdp_dev* dev) {
     if (do_status(dev) < 0) {
         log.e("Status error");
-        return;
+        return false;
     }
 
     sdp_work* curr = dev->work;
@@ -34,7 +34,7 @@ static void handleWork(JLogProxy& log, sdp_dev* dev) {
             int err = DoIRomDownload(dev, curr, 0);
             if (err) {
                 log.e("DoIRomDownload failed; err = %i", err);
-                break;
+                return false;
             }
         }
         if (!curr->next) {
@@ -48,9 +48,10 @@ static void handleWork(JLogProxy& log, sdp_dev* dev) {
 
         if (do_status(dev) < 0) {
             log.e("Device disconnected");
-            break;
+            return false;
         }
     }
+    return true;
 }
 
 static int funcHidTransfer(sdp_dev* dev, int report, unsigned char* p, unsigned int cnt,
@@ -142,7 +143,7 @@ static int funcBulkTransfer(sdp_dev* dev, int report, unsigned char* p, unsigned
     return 0;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_io_mrarm_switchlinuxlauncher_ImxUsbLoader_nativeLoad(
         JNIEnv* env, jclass, jobject jlog, jint fd, jboolean hidMode, jstring confPath) {
     JLogProxyEnv logEnv(env);
@@ -155,15 +156,17 @@ Java_io_mrarm_switchlinuxlauncher_ImxUsbLoader_nativeLoad(
 
     if (dev == nullptr) {
         imx_logger_log(nullptr);
-        return;
+        return JNI_FALSE;
     }
 
     dev->priv = &fd;
     dev->transfer = hidMode ? funcHidTransfer : funcBulkTransfer;
 
-    handleWork(log, dev);
+    bool success = handleWork(log, dev);
 
     free(dev);
 
     imx_logger_set(nullptr);
+
+    return success ? JNI_TRUE : JNI_FALSE;
 }
