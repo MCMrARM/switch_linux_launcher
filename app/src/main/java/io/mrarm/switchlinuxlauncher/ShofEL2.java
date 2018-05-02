@@ -22,6 +22,7 @@ public class ShofEL2 {
     private static final int TIMEOUT = 2000;
 
     private static final String PAYLOAD_FILENAME = "shofel2/cbfs.bin";
+    private static final String COREBOOT_FILENAME = "shofel2/coreboot.rom";
 
     private Context ctx;
     private LogProxy log;
@@ -124,6 +125,56 @@ public class ShofEL2 {
         }
 
         log.i("Performing hax...");
+        nativeControlReadUnbounded(log, conn.getFileDescriptor(), overrideLen);
+
+        byte[] buf = new byte[4096];
+        while (true) {
+            int len = conn.bulkTransfer(eIn, buf, buf.length, 0);
+            if (len < 0)
+                continue;
+            String cmd = new String(buf, 0, len);
+            cmd = cmd.trim();
+            log.i("In: " + cmd);
+            if (cmd.equals("CBFS")) {
+                cbfs();
+                break;
+            }
+        }
     }
+
+    private void cbfs() throws IOException {
+        ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+        readAssetFile(COREBOOT_FILENAME, dataStream);
+        byte[] data = dataStream.toByteArray();
+        if (data.length < 20 * 1024)
+            throw new RuntimeException("Invalid coreboot.rom");
+        byte[] inBuf = new byte[8];
+        while (true) {
+            int inLen = conn.bulkTransfer(eIn, inBuf, 8, 0);
+            if (inLen < 8)
+                throw new RuntimeException("Read error");
+            int offset = BinaryReader.readInt32(inBuf, 0);
+            int length = BinaryReader.readInt32(inBuf, 4);
+            log.i("Sending 0x" + Integer.toString(length, 16) + " bytes @0x" +
+                    Integer.toString(offset, 16));
+            while (length > 0) {
+                int l = length;
+                if (l > 32 * 1024)
+                    l = 32 * 1024;
+                log.i("Transfer " + offset + " " + l + " " + (offset + l) + "/" + data.length);
+                int n = conn.bulkTransfer(eOut, data, offset, l, 0);
+                if (n < 0)
+                    throw new RuntimeException("Write error");
+                offset += n;
+                length -= n;
+            }
+        }
+    }
+
+    static {
+        System.loadLibrary("switchlauncher");
+    }
+
+    private native static void nativeControlReadUnbounded(LogProxy log, int fd, int size);
 
 }
