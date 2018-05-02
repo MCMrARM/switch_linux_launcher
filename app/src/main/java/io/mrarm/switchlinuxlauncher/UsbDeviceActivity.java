@@ -135,9 +135,11 @@ public class UsbDeviceActivity extends AppCompatActivity {
     }
 
     private void runRCMExploit(UsbDeviceConnection connection) {
+        ShofEL2 exploit = null;
         try {
             log.i("Initializing USB exploit");
-            ShofEL2 exploit = new ShofEL2(this, logger, usbDevice, connection);
+            exploit = new ShofEL2(this, logger, usbDevice, connection);
+            exploit.claimInterface();
             log.i("Executing USB exploit");
             exploit.run();
 
@@ -146,15 +148,19 @@ public class UsbDeviceActivity extends AppCompatActivity {
             log.e("An error has occurred", t);
             onOperationFailed();
         }
+        if (exploit != null)
+            exploit.releaseInterface();
     }
 
     private void runUBootLoader(UsbDeviceConnection connection) {
         log.i("Starting IMX USB Loader");
         ImxUsbLoader loader = new ImxUsbLoader(logger, usbDevice, connection);
+        loader.claimInterface();
         if (loader.load("/sdcard/imxusb/switch.conf"))
             onOperationSucceeded();
         else
             onOperationFailed();
+        loader.releaseInterface();
     }
 
     private synchronized void onOperationStarted() {

@@ -38,10 +38,17 @@ public class ShofEL2 {
         this.device = device;
         this.conn = conn;
         deviceInterface = device.getInterface(0);
-        if (!conn.claimInterface(deviceInterface, true))
-            throw new RuntimeException("Claiming in the interface failed");
         eIn = deviceInterface.getEndpoint(0);
         eOut = deviceInterface.getEndpoint(1);
+    }
+
+    public void claimInterface() {
+        if (!conn.claimInterface(deviceInterface, true))
+            throw new RuntimeException("Claiming in the interface failed");
+    }
+
+    public void releaseInterface() {
+        conn.releaseInterface(deviceInterface);
     }
 
     private void readAssetFile(String name, OutputStream toStream) throws IOException {

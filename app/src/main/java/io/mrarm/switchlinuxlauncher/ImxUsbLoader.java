@@ -18,8 +18,15 @@ public class ImxUsbLoader {
         log = new LogProxy(logger, "ImxUsbLoader");
         this.conn = conn;
         deviceInterface = device.getInterface(0);
+    }
+
+    public void claimInterface() {
         if (!conn.claimInterface(deviceInterface, true))
             throw new RuntimeException("Claiming in the interface failed");
+    }
+
+    public void releaseInterface() {
+        conn.releaseInterface(deviceInterface);
     }
 
     public boolean load(String confPath) {
