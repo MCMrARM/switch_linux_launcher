@@ -7,6 +7,8 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,24 +21,23 @@ import io.mrarm.switchlinuxlauncher.util.HexString;
 
 public class ShofEL2 {
 
-    private static final int TIMEOUT = 2000;
+    public static final String PAYLOAD_FILENAME = "cbfs.bin";
+    public static final String COREBOOT_FILENAME = "coreboot.rom";
 
-    private static final String PAYLOAD_FILENAME = "shofel2/cbfs.bin";
-    private static final String COREBOOT_FILENAME = "shofel2/coreboot.rom";
 
-    private Context ctx;
     private LogProxy log;
     private UsbDevice device;
     private UsbDeviceConnection conn;
     private UsbInterface deviceInterface;
     private UsbEndpoint eIn;
     private UsbEndpoint eOut;
+    private File payloadDir;
 
-    public ShofEL2(Context ctx, Logger logger, UsbDevice device, UsbDeviceConnection conn) {
-        this.ctx = ctx;
+    public ShofEL2(Logger logger, UsbDevice device, UsbDeviceConnection conn, File payloadDir) {
         this.log = new LogProxy(logger, "ShofEL2");
         this.device = device;
         this.conn = conn;
+        this.payloadDir = payloadDir;
         deviceInterface = device.getInterface(0);
         eIn = deviceInterface.getEndpoint(0);
         eOut = deviceInterface.getEndpoint(1);
@@ -51,12 +52,13 @@ public class ShofEL2 {
         conn.releaseInterface(deviceInterface);
     }
 
-    private void readAssetFile(String name, OutputStream toStream) throws IOException {
-        InputStream is = ctx.getAssets().open(name);
+    private void readAdditionalFile(String name, OutputStream toStream) throws IOException {
+        InputStream is = new FileInputStream(new File(payloadDir, name));
         byte[] buf = new byte[4096];
         int n;
         while ((n = is.read(buf)) > 0)
             toStream.write(buf, 0, n);
+        is.close();
     }
 
     private void write(byte[] data, int offset, int len) {
@@ -117,7 +119,7 @@ public class ShofEL2 {
             entry |= 1;
             BinaryWriter.writeInt32(buf, 0, entry);
             payload.write(buf, 0, 4);
-            readAssetFile(PAYLOAD_FILENAME, payload);
+            readAdditionalFile(PAYLOAD_FILENAME, payload);
             byte[] payloadData = payload.toByteArray();
             for (int i = 0; i < payloadData.length; i += xferLen)
                 write(payloadData, i, Math.min(xferLen, payloadData.length - i));
@@ -152,7 +154,7 @@ public class ShofEL2 {
 
     private void cbfs() throws IOException {
         ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
-        readAssetFile(COREBOOT_FILENAME, dataStream);
+        readAdditionalFile(COREBOOT_FILENAME, dataStream);
         byte[] data = dataStream.toByteArray();
         if (data.length < 20 * 1024)
             throw new RuntimeException("Invalid coreboot.rom");

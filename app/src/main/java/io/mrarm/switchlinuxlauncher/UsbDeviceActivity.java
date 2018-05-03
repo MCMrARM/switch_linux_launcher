@@ -138,7 +138,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
         ShofEL2 exploit = null;
         try {
             log.i("Initializing USB exploit");
-            exploit = new ShofEL2(this, logger, usbDevice, connection);
+            exploit = new ShofEL2(logger, usbDevice, connection, FilePaths.getShofEL2Dir(this));
             exploit.claimInterface();
             log.i("Executing USB exploit");
             exploit.run();
@@ -156,7 +156,7 @@ public class UsbDeviceActivity extends AppCompatActivity {
         log.i("Starting IMX USB Loader");
         ImxUsbLoader loader = new ImxUsbLoader(logger, usbDevice, connection);
         loader.claimInterface();
-        if (loader.load("/sdcard/imxusb/switch.conf"))
+        if (loader.load(FilePaths.getImxConfigPath(this).getAbsolutePath()))
             onOperationSucceeded();
         else
             onOperationFailed();

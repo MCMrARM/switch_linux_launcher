@@ -1,11 +1,13 @@
 package io.mrarm.switchlinuxlauncher;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView statusText;
     private Button buttonHack;
+
+    private AlertDialog missingFilesDialog = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +59,45 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         scanForDevicesAndQueue();
+        checkMissingFiles();
+    }
+
+    public void checkMissingFiles() {
+        final File shofelDir = FilePaths.getShofEL2Dir(this);
+        final File[] shofelFiles = new File[] {
+                new File(shofelDir, ShofEL2.PAYLOAD_FILENAME),
+                new File(shofelDir, ShofEL2.COREBOOT_FILENAME)
+        };
+        boolean hasShofelFiles = true;
+        for (File file : shofelFiles) {
+            if (!file.exists())
+                hasShofelFiles = false;
+        }
+
+        boolean hasImxFiles = FilePaths.getImxConfigPath(this).exists();
+
+        if (hasShofelFiles && hasImxFiles)
+            return;
+        StringBuilder str = new StringBuilder();
+        str.append(getString(R.string.missing_files_desc_header));
+        if (!hasShofelFiles) {
+            str.append('\n');
+            str.append(getString(R.string.missing_files_desc_shofel, shofelDir.getAbsolutePath()));
+        }
+        if (!hasImxFiles) {
+            str.append('\n');
+            str.append(getString(R.string.missing_files_desc_imx, FilePaths.getImxDir(this)
+                    .getAbsolutePath()));
+        }
+
+        if (missingFilesDialog != null)
+            missingFilesDialog.dismiss();
+        missingFilesDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.missing_files_header)
+                .setMessage(str.toString())
+                .setPositiveButton(android.R.string.ok, null)
+                .setOnDismissListener((DialogInterface di) -> { missingFilesDialog = null; })
+                .show();
     }
 
     public void scanForDevices() {
